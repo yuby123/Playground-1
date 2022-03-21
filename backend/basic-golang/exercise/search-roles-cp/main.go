@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 // Check Point:
 // Search Roles
 // - Input: Role
@@ -31,7 +29,6 @@ type User struct {
 }
 
 func main() {
-
 	users := []User{
 		{
 			name: "Aditira",

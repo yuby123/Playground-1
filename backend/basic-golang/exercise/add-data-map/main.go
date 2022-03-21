@@ -16,7 +16,7 @@ import (
 //   - Masukan email: dita@gmail.com
 
 // Output:
-// - Data updated! dengan uername: dita dan email: dita@gmail.com
+// - Data updated! dengan username: dita dan email: dita@gmail.com
 
 // Input:
 // - Ingin menambah data baru?(yes/no): if no (break) --> if yes (add again)
