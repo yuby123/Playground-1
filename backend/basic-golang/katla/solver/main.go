@@ -92,6 +92,75 @@ func calculateHints(guess, answer string) (hints []hint) {
 
 func main() {
 	dictionary := getDictionaryWords()
+	isAllLowerCase := true
 
 	// TODO: answer here
+	for len(dictionary) > 1 {
+		var guess, suggestHints string
+		fmt.Printf("Guess: ")
+
+		fmt.Scanln(&guess)
+
+		fmt.Printf("Hint: ")
+		fmt.Scanln(&suggestHints)
+
+		for _, c := range guess {
+			if !(c >= 'a' && c <= 'z') {
+				isAllLowerCase = false
+			}
+		}
+
+		if !isAllLowerCase {
+			fmt.Println("Please enter lowercase characters only")
+			continue
+		} else if len(guess) != wordLength {
+			fmt.Printf("Please enter exactly %d characters\n", wordLength)
+			continue
+		} else if len(guess) != len(suggestHints) {
+			fmt.Printf("Please enter exactly %d same as %d hints\n", len(guess), len(suggestHints))
+			continue
+		}
+
+		receiveHint := make([]hint, wordLength)
+		for i := 0; i < wordLength; i++ {
+			if suggestHints[i] == 'X' {
+				receiveHint[i] = notFound
+			} else if suggestHints[i] == 'G' {
+				receiveHint[i] = correctLetter
+			} else {
+				receiveHint[i] = correctPosition
+			}
+
+		}
+
+		filterDictionary := make([]string, 0)
+
+		//print match dictionary
+		for _, dict := range dictionary {
+			hints := calculateHints(guess, dict)
+			match := true
+
+			for i := 0; i < wordLength; i++ {
+				if hints[i] != receiveHint[i] {
+					match = false
+					break
+				}
+			}
+
+			if match {
+				filterDictionary = append(filterDictionary, dict)
+			}
+		}
+
+		fmt.Println("Possible Words:")
+		for _, dict := range filterDictionary {
+			fmt.Printf("%s", dict)
+		}
+
+		fmt.Println()
+		fmt.Print("===============================================================")
+		fmt.Println()
+
+	}
+	//endanswer
 }
