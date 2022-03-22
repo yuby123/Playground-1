@@ -22,6 +22,7 @@ func getDictionaryWords() []string {
 	if err != nil {
 		panic(err)
 	}
+
 	defer data.Body.Close()
 
 	body, err := io.ReadAll(data.Body)
@@ -60,17 +61,18 @@ const (
 )
 
 func calculateHints(guess, answer string) (hints []hint) {
-	guessChars := []rune(guess)
-	answerChars := []rune(answer)
+	guessChars := []rune(guess)   //["t","e","s","t","a"]
+	answerChars := []rune(answer) //["d", "o", "m", "b", "a"]
 
-	hints = make([]hint, wordLength)
+	hints = make([]hint, wordLength) //[[],[],[],[],[]]
 
 	for i := 0; i < wordLength; i++ {
 		if guessChars[i] == answerChars[i] {
 			hints[i] = correctPosition
 		} else {
+			// karakter ada atau di jawabannya
 			for j := 0; j < wordLength; j++ {
-				if i != j {
+				if i != j { //0 != 1
 					//when the answer is:
 					//STROK, and we guess:
 					//SOSOK
@@ -81,6 +83,8 @@ func calculateHints(guess, answer string) (hints []hint) {
 					//Reason: the second 'O' has been marked as correct position ('Y')
 					//if we mark 'Y' for the first 'O', people would guess there should be yet another 'O'
 					//while in fact there is only one 'O' in 'STROK'
+
+					// ["t"] == ["o"] dan ["e"] != ["o"]
 					if guessChars[i] == answerChars[j] && guessChars[j] != answerChars[j] {
 						hints[i] = correctLetter
 						break
@@ -93,9 +97,13 @@ func calculateHints(guess, answer string) (hints []hint) {
 }
 
 func main() {
+	// ambil kamus kata
 	dictionary := getDictionaryWords()
 
+	// dapetin random berdasarkan waktu
 	rand.Seed(time.Now().UnixNano())
+
+	// ambil jawaban random dari kamus
 	answer := dictionary[rand.Intn(len(dictionary))]
 	// fmt.Printf("Answer: %s\n", answer)
 
@@ -103,6 +111,7 @@ func main() {
 	for trial := 0; trial < maxGuess; trial++ {
 		var guess string
 		fmt.Printf("Guess %d: \n", trial+1)
+		// ngecheck kondisi
 		for {
 			guess = ""
 			fmt.Scanln(&guess)
@@ -118,6 +127,7 @@ func main() {
 					isAllLowerCase = false
 				}
 			}
+
 			if !isAllLowerCase {
 				fmt.Println("Please enter lowercase characters only")
 				continue
@@ -131,14 +141,14 @@ func main() {
 			break
 		}
 
-		hints := calculateHints(guess, answer)
-		for i := 0; i < wordLength; i++ {
+		hints := calculateHints(guess, answer) //answer = "domba" guess="test"
+		for i := 0; i < wordLength; i++ {      //0 1 2 3 4
 			if hints[i] == notFound {
-				fmt.Printf("X")
+				fmt.Printf("X") // abu-abu
 			} else if hints[i] == correctPosition {
-				fmt.Printf("G")
+				fmt.Printf("G") // hijau
 			} else if hints[i] == correctLetter {
-				fmt.Printf("Y")
+				fmt.Printf("Y") //orange
 			}
 		}
 		fmt.Println()

@@ -5,6 +5,7 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -21,7 +22,6 @@ func getDictionaryWords() []string {
 	if err != nil {
 		panic(err)
 	}
-
 	defer data.Body.Close()
 
 	body, err := io.ReadAll(data.Body)
@@ -32,9 +32,11 @@ func getDictionaryWords() []string {
 	lines := string(body)
 	words := make([]string, 0)
 
-	// check regex buat word
 	for _, line := range strings.Split(lines, "\n") {
-
+		matched, _ := regexp.MatchString(fmt.Sprintf("^[a-zA-Z]{%d}$", wordLength), line) //don't worry about this
+		if matched {
+			words = append(words, strings.ToLower(line))
+		}
 	}
 	return words
 }
@@ -58,18 +60,17 @@ const (
 )
 
 func calculateHints(guess, answer string) (hints []hint) {
-	guessChars := []rune(guess)   //["t","e","s","t","a"]
-	answerChars := []rune(answer) //["d", "o", "m", "b", "a"]
+	guessChars := []rune(guess)
+	answerChars := []rune(answer)
 
-	hints = make([]hint, wordLength) //[[],[],[],[],[]]
+	hints = make([]hint, wordLength)
 
 	for i := 0; i < wordLength; i++ {
 		if guessChars[i] == answerChars[i] {
 			hints[i] = correctPosition
 		} else {
-			// karakter ada atau di jawabannya
 			for j := 0; j < wordLength; j++ {
-				if i != j { //0 != 1
+				if i != j {
 					//when the answer is:
 					//STROK, and we guess:
 					//SOSOK
@@ -80,9 +81,10 @@ func calculateHints(guess, answer string) (hints []hint) {
 					//Reason: the second 'O' has been marked as correct position ('Y')
 					//if we mark 'Y' for the first 'O', people would guess there should be yet another 'O'
 					//while in fact there is only one 'O' in 'STROK'
-
-					// ["t"] == ["o"] dan ["e"] != ["o"]
-
+					if guessChars[i] == answerChars[j] && guessChars[j] != answerChars[j] {
+						hints[i] = correctLetter
+						break
+					}
 				}
 			}
 		}
@@ -91,13 +93,9 @@ func calculateHints(guess, answer string) (hints []hint) {
 }
 
 func main() {
-	// ambil kamus kata
 	dictionary := getDictionaryWords()
 
-	// dapetin random berdasarkan waktu
 	rand.Seed(time.Now().UnixNano())
-
-	// ambil jawaban random dari kamus
 	answer := dictionary[rand.Intn(len(dictionary))]
 	// fmt.Printf("Answer: %s\n", answer)
 
@@ -105,15 +103,43 @@ func main() {
 	for trial := 0; trial < maxGuess; trial++ {
 		var guess string
 		fmt.Printf("Guess %d: \n", trial+1)
-		// ngecheck kondisi
 		for {
+			guess = ""
+			fmt.Scanln(&guess)
 
+			if len(guess) != wordLength {
+				fmt.Printf("Please enter exactly %d characters\n", len(answer))
+				continue
+			}
+
+			isAllLowerCase := true
+			for _, c := range guess {
+				if !(c >= 'a' && c <= 'z') {
+					isAllLowerCase = false
+				}
+			}
+			if !isAllLowerCase {
+				fmt.Println("Please enter lowercase characters only")
+				continue
+			}
+
+			if !isInDictionary(guess, dictionary) {
+				fmt.Printf("%s is not in the dictionary\n", guess)
+				continue
+			}
+
+			break
 		}
 
-		// kasih character
-		hints := calculateHints(guess, answer) //answer = "domba" guess="test"
-		for i := 0; i < wordLength; i++ {      //0 1 2 3 4
-
+		hints := calculateHints(guess, answer)
+		for i := 0; i < wordLength; i++ {
+			if hints[i] == notFound {
+				fmt.Printf("X")
+			} else if hints[i] == correctPosition {
+				fmt.Printf("G")
+			} else if hints[i] == correctLetter {
+				fmt.Printf("Y")
+			}
 		}
 		fmt.Println()
 		fmt.Println()
@@ -125,7 +151,6 @@ func main() {
 		}
 	}
 
-	//print kalo lose
 	if !isWin {
 		fmt.Printf("The correct answer is: %s\n", answer)
 	}
